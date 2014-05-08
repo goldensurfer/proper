@@ -16,34 +16,23 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with PropEr.  If not, see <http://www.gnu.org/licenses/>.
+PROJECT = proper
 
-# Author(s):   Manolis Papadakis, Kostis Sagonas
-# Description: Instructions for make
+ERLC_OPTS = +debug_info +warn_export_all +warn_export_vars +warn_shadow_vars +warn_obsolete_guard
 
-.PHONY: default fast all get-deps compile dialyzer check_escripts tests doc clean distclean rebuild retest
+PLT_APPS = hipe sasl mnesia crypto compiler syntax_tools
+DIALYZER_OPTS = -Werror_handling -Wrace_conditions -Wunmatched_returns | fgrep -v -f ./dialyzer.ignore-warning
 
-ifneq (,$(findstring Windows,$(OS)))
-    SEP := $(strip \)
-else
-    SEP := $(strip /)
-endif
+COMPILE_FIRST = vararg.erl strip_types.erl
 
-REBAR := .$(SEP)rebar
+my_all: all doc include/compile_flags.hrl
 
-default: fast dialyzer
+include erlang.mk
 
-fast: get-deps compile
-
-all: default doc tests
+.PHONY: default all get-deps compile dialyzer check_escripts
 
 include/compile_flags.hrl:
-	./write_compile_flags $@
-
-get-deps:
-	$(REBAR) get-deps
-
-compile:
-	$(REBAR) compile
+	./write_compile_flags include/compile_flags.hrl
 
 dialyzer: compile
 	dialyzer -n -nn -Wunmatched_returns ebin $(find .  -path 'deps/*/ebin/*.beam')
@@ -51,22 +40,5 @@ dialyzer: compile
 check_escripts:
 	./check_escripts.sh make_doc write_compile_flags
 
-tests: compile
-	$(REBAR) eunit
-
 doc:
 	./make_doc
-
-clean:
-	./clean_temp.sh
-
-distclean: clean
-	rm -f include/compile_flags.hrl
-	$(REBAR) clean
-
-rebuild: distclean include/compile_flags.hrl
-	$(REBAR) compile
-
-retest: compile
-	rm -rf .eunit
-	$(REBAR) eunit
