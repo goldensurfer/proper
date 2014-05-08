@@ -25,7 +25,7 @@ DIALYZER_OPTS = -Werror_handling -Wrace_conditions -Wunmatched_returns | fgrep -
 
 COMPILE_FIRST = vararg.erl strip_types.erl
 
-my_all: all doc include/compile_flags.hrl
+my_all: include/compile_flags.hrl all doc
 
 include erlang.mk
 
@@ -42,3 +42,4 @@ check_escripts:
 
 doc:
 	./make_doc
+	cp overview.edoc doc
